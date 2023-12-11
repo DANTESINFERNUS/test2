@@ -1,0 +1,151 @@
+-- Abaixo Estará a lib da nossa ui
+
+local lib = loadsting(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Define as cores das equipes
+local allyColor = Color3.fromRGB(0, 0, 255) -- Azul
+local enemyColor = Color3.fromRGB(255, 0, 0) -- Vermelho
+
+-- Define o campo de visão (FOV)
+local fov = 100
+
+-- Define se o script está ativado ou desativado
+local scriptEnabled = true
+
+local UI = Lib:Create{
+    Theme = "Dark", -- or any other theme
+    Size = UDim2.new(0, 555, 0, 400) -- default
+ }
+ 
+ local Main = UI:Tab{
+    Name = "Inicio"
+ }
+ 
+ local Divider = Main:Divider{
+    Name = "Inicio shit"
+ }
+ 
+ local QuitDivider = Main:Divider{
+    Name = "Sair"
+ } 
+
+ local KillAll = Divider:Button{
+    Name = "ESP",
+    Description = "ESP ATIVADO",
+    Callback = function createESP(character)
+        -- Cria o SurfaceGui
+        local surfaceGui = Instance.new("SurfaceGui", character)
+    
+        -- Define as propriedades do SurfaceGui
+        surfaceGui.Face = Enum.NormalId.Front
+        surfaceGui.AlwaysOnTop = true
+    
+        -- Cria o Frame
+        local frame = Instance.new("Frame", surfaceGui)
+    
+        -- Define as propriedades do Frame
+        frame.Size = UDim2.new(1, 0, 1, 0)
+        frame.BorderSizePixel = 0
+        frame.BackgroundTransparency = 0.5
+    
+        -- Verifica se o jogador é da mesma equipe
+        if character.TeamColor == LocalPlayer.TeamColor then
+            frame.BackgroundColor3 = allyColor
+        else
+            frame.BackgroundColor3 = enemyColor
+        end
+    
+        -- Cria o TextLabel para o nome do jogador
+        local textLabel = Instance.new("TextLabel", frame)
+    
+        -- Define as propriedades do TextLabel
+        textLabel.Text = character.Name
+        textLabel.TextColor3 = Color3.new(1, 1, 1)
+        textLabel.BackgroundTransparency = 1
+        textLabel.Position = UDim2.new(0, 0, 0, -20)
+        textLabel.Size = UDim2.new(1, 0, 0, 20)
+        textLabel.Font = Enum.Font.SourceSansBold
+        textLabel.TextSize = 14
+    end
+    
+    -- Função para verificar se um objeto é uma parte
+    function isPart(obj)
+        return obj:IsA("Part") or obj:IsA("MeshPart")
+    end
+ }
+ 
+ local KillAll = Divider:Toggle{
+    Name = "FOV ESP",
+    Description = "FOV ESP ATIVADO",
+    Callback = function isInFOV(obj)
+        local camera = workspace.CurrentCamera
+        local viewportSize = camera.ViewportSize
+        local center = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
+        local objPosition, onScreen = camera:WorldToViewportPoint(obj.Position)
+        local distance = (Vector2.new(objPosition.X, objPosition.Y) - center).Magnitude
+        return onScreen and distance <= fov
+    end
+
+ local function updateESP()
+    -- Verifica se o script está ativado
+    if not scriptEnabled then
+        return
+    end
+
+    -- Remove todos os ESPs existentes
+    for _, child in ipairs(workspace:GetChildren()) do
+        if isPart(child) and child:FindFirstChild("SurfaceGui") then
+            child.SurfaceGui:Destroy()
+        end
+    end
+
+    -- Cria um ESP para cada jogador
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart:FindFirstChild("Health") and player.Character.HumanoidRootPart.Health > 0 and player ~= LocalPlayer then
+            if player.TeamColor ~= LocalPlayer.TeamColor or isInFOV(player.Character.HumanoidRootPart) then
+                createESP(player.Character)
+            end
+        end
+    end
+end
+} 
+LocalPlayer.CharacterAdded:Connect(function(character)
+    -- Atualiza o ESP quando um novo personagem é adicionado
+    updateESP()
+end)
+ 
+-- Conecta o evento ChildAdded do workspace
+workspace.ChildAdded:Connect(function(child)
+    -- Atualiza o ESP quando um novo objeto é adicionado ao workspace
+    if isPart(child) and child:FindFirstChild("HumanoidRootPart") and child:FindFirstChild("TeamColor")
+end)
+ 
+ Divider:Box{
+    Name = "Car name",
+    ClearText = true, -- whether the textbox clears on focus or not
+    Callback = function(Value)
+        print(Value)
+    end
+ }
+ 
+ Divider:SearchDropdown{
+    Name = "Teleports",
+    Options = {"Pleasant Park", "Loot Lake", "Tomato Town", "Wailing Woods", "Anarchy Acres", "Retail Row"},
+    ClearText = false, -- default
+    Callback = function(Value)
+        print(Value)
+    end
+ }
+ 
+ local Quit = QuitDivider:Button{
+    Name = "Closes the ui library.",
+    Callback = function()
+        UI:Quit{
+            Message = "Fuck off...", -- closing message
+            Length = 1 -- seconds the closing message shows for
+        }
+    end
+ }
